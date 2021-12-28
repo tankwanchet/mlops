@@ -96,13 +96,13 @@ class Preprocessor:
         return df
 
 
-if __name__ == "__main__":
-    df = pd.read_csv(RAW_DATA_PATH)
-    print(df.head())
-    print(df.shape)
+# if __name__ == "__main__":
+#     df = pd.read_csv(RAW_DATA_PATH)
+#     print(df.head())
+#     print(df.shape)
 
-    # Test transformation
-    preprocessor = Preprocessor(df)
-    clean_engineered_data = preprocessor.transform()
-    print(clean_engineered_data)
-    print(clean_engineered_data.columns)
+#     # Test transformation
+#     preprocessor = Preprocessor(df)
+#     clean_engineered_data = preprocessor.transform()
+#     print(clean_engineered_data)
+#     print(clean_engineered_data.columns)
