@@ -27,7 +27,6 @@ print("role: ", role)
 region = boto3.session.Session().region_name # set the region of the instance
 print("my_region: ", region)
 instance_type = 'local'
-image_uri="aws:train"
 
 
 # Create the parser
@@ -47,28 +46,9 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
-    if args.script_type == 'preprocess':
-        os.system('docker build --target processing_layer -t aws:process .')
-        script_processor = ScriptProcessor(
-            command=['python3'],
-            image_uri='image_uri',
-            role='role_arn',
-            instance_count=1,
-            instance_type='ml.m5.xlarge'
-        )
-
-        script_processor.run(
-            code='preprocess.py',
-            inputs=[ProcessingInput(
-                source='/mlops/data/raw/titanic.csv',
-                destination='/mlops/data/processed/')],
-                outputs=[ProcessingOutput(source='/mlops/data/processed/train'),
-                               ProcessingOutput(source='/mlops/data/processed/validation'),
-                               ProcessingOutput(source='/mlops/data/processed/output/test')])
-
-    elif args.script_type == 'train':
+    if args.script_type == 'train':
         os.system('docker build  --target training_layer -t aws:train .')
-
+        image_uri="aws:train"
         estimator = Estimator(image_uri=image_uri, 
                             role=role, 
                             instance_count=1, 
@@ -80,8 +60,8 @@ if __name__ == "__main__":
         estimator.fit(inputs=f'file://./data/raw/titanic.csv',job_name='mlops_training_1')
 
     elif args.script_type == 'inference':
-        os.system('docker build  --target training_layer -t aws:train .')
-
+        os.system('docker build  --target training_layer -t aws:infer .')
+        image_uri="aws:infer"
         estimator = Estimator(image_uri=image_uri, 
                             role=role, 
                             instance_count=1, 
