@@ -11,7 +11,7 @@ from sklearn import preprocessing
 ##################
 # Configurations #
 ##################
-from config import RAW_DATA_PATH, NOMINAL, NUMERICAL, ORDINAL
+from .config import RAW_DATA_PATH, NOMINAL, NUMERICAL, ORDINAL
 TITLE_RE = re.compile(' ([A-Za-z]+)\.')
 
 class Preprocessor:
@@ -85,7 +85,6 @@ class Preprocessor:
         """
         df = pd.get_dummies(df, columns=features, drop_first = True)
         return df
-            # X_train_onehot = pd.concat([X_train_onehot, pd.get_dummies(X_train_onehot[feature], drop_first = True)], axis =1)
 
     def transform(self):
         df = self.impute_nas(self.df, NUMERICAL)

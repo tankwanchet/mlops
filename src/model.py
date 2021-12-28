@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_FILENAME 
+from .config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_FILENAME 
 
 ###############
 # Model Class #
@@ -73,7 +73,7 @@ class Model:
         
         # split val and train data
         features = df.columns[df.columns != self.target]
-        train_df, test_df = train_test_split(
+        train_df, val_df = train_test_split(
             df, train_size=.8, test_size=.2, shuffle=False
         )
 
@@ -81,14 +81,14 @@ class Model:
         self.estimator.set_params(**params)
         self.estimator.fit(train_df[features], train_df[self.target])
 
-        # save model
-        pickle.dump(self.estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+        # # save model
+        # pickle.dump(self.estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
 
         # predict on test data
-        predict_y = self.estimator.predict(test_df[features])
+        predict_y = self.estimator.predict(val_df[features])
         
         # Return a evaluation metric (roc_auc in this case) as a single float so the caller can make use of it
-        return roc_auc_score(test_df[self.target], predict_y), self.estimator
+        return roc_auc_score(val_df[self.target], predict_y), self.estimator
 
     def predict(self, df):
         """ Predicts using the trained model
