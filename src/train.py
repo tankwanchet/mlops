@@ -40,4 +40,7 @@ if __name__ == "__main__":
     # Testing string representation of Model
     my_model = Model()
     print("Current model:", my_model)
-    print(my_model.train(df=data_df,params=MY_PARAMS))
+    roc_score, model_chkpt = my_model.train(df=data_df,params=MY_PARAMS)
+    print("roc_score: ", roc_score)
+    print("model_chkpt: ", model_chkpt)
+    print("model training complete!")

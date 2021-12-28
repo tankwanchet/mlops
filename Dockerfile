@@ -6,7 +6,8 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy source codes
-COPY src /opt/ml/code/
+WORKDIR mlops
+COPY . /mlops
 
 # run the training pipeline
-ENTRYPOINT ["python", "/opt/ml/code/train.py"]
+ENTRYPOINT ["python", "./src/train.py"]

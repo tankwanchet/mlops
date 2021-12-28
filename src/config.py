@@ -1,7 +1,7 @@
 ##################
 # Configurations #
 ##################
-RAW_DATA_PATH = "../data/raw/titanic.csv"
+RAW_DATA_PATH = "/mlops/data/raw/titanic.csv"
 ORDINAL = ['Pclass', 'Ticket', 'Cabin', 'Parch', 'SibSp']
 NOMINAL = ['Embarked', 'Sex', 'Title']
 NUMERICAL = ['Age',  'Fare']
@@ -14,4 +14,4 @@ MY_PARAMS = {
             'n_jobs': -1, 
             'oob_score': True
         }
-TRAINED_MODEL_FILENAME = '../model_checkpoint/trained_model.sav'
+TRAINED_MODEL_FILENAME = '/mlops/model_checkpoint/trained_model.sav'
