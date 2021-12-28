@@ -11,7 +11,7 @@ from sklearn import preprocessing
 ##################
 # Configurations #
 ##################
-from .config import RAW_DATA_PATH, NOMINAL, NUMERICAL, ORDINAL
+from config import RAW_DATA_PATH, NOMINAL, NUMERICAL, ORDINAL
 TITLE_RE = re.compile(' ([A-Za-z]+)\.')
 
 class Preprocessor:

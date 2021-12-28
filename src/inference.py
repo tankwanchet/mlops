@@ -27,17 +27,20 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import TRAIN_CSV, MY_PARAMS, TRAINED_MODEL_FILENAME 
+from config import TEST_CSV, MY_PARAMS, TRAINED_MODEL_FILENAME 
 
 
 if __name__ == "__main__":
     # Retrieving feature-engineered data
-    df = pd.read_csv(TRAIN_CSV)
+    df = pd.read_csv(TEST_CSV)
+    
+    loaded_model = pickle.load("./model_checkpoint/trained_model.sav")
+
 
     # Testing string representation of Model
     my_model = Model()
     print("Current model:", my_model)
-    roc_score, model_chkpt = my_model.train(df=df,params=MY_PARAMS)
+#     roc_score, model_chkpt = my_model.train(df=df,params=MY_PARAMS)
     print("roc_score: ", roc_score)
     print("model_chkpt: ", model_chkpt)
     print("model training complete!")

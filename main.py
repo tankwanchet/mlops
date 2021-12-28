@@ -11,13 +11,19 @@ import sagemaker
 from sagemaker.estimator import Estimator
 import boto3
 import pandas as pd
+import pickle
 from sagemaker import Model, LocalSession, get_execution_role
-from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOutput
+
+##################
+# Configurations #
+##################
+from src.config import TRAINED_MODEL_FILENAME
 
 # Credentials
 sagemaker_session = LocalSession()
 sagemaker_session.config = {'local': {'local_code': True}}
 bucket_name = sagemaker_session.default_bucket()
+base_job_name = "checkpoint-test"
 print("bucket: ", bucket_name)
 s3 = boto3.client('s3')
 
@@ -37,7 +43,7 @@ parser.add_argument(
     '--script_type', 
     type=str, 
     default='train',
-    help='choose process, train or inference'
+    help='choose train or inference'
 )
 
 
@@ -54,23 +60,37 @@ if __name__ == "__main__":
                             instance_count=1, 
                             instance_type='local', 
                             output_path='file://./model_checkpoint', 
-                            base_job_name='mlops_training')
+                            base_job_name=base_job_name)
 
         print("Local: Start fitting ... ")
-        estimator.fit(inputs=f'file://./data/raw/titanic.csv',job_name='mlops_training_1')
+        estimator.fit(job_name='mlops_training_1')
+        pickle.dump(estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+
 
     elif args.script_type == 'inference':
-        os.system('docker build  --target training_layer -t aws:infer .')
+#         os.system('docker build  --target inference_layer -t aws:infer .')
         image_uri="aws:infer"
-        estimator = Estimator(image_uri=image_uri, 
-                            role=role, 
-                            instance_count=1, 
-                            instance_type='local', 
-                            output_path='file://./model_checkpoint', 
-                            base_job_name='mlops_training')
+        model = sagemaker.model.Model(
+            image_uri=image_uri,
+            model_data='file://./model_checkpoint/model.tar.gz',
+            role=role
+        )
+#         estimator = Estimator(image_uri=image_uri, 
+#                             role=role, 
+#                             instance_count=1, 
+#                             instance_type='local', 
+#                             model_uri='file://./model_checkpoint/model.tar.gz')
 
-        print("Local: Start fitting ... ")
-        estimator.fit(inputs=f'file://./data/raw/titanic.csv',job_name='mlops_training_1')
+        print("Local: Start deploying ... ")
+        model.deploy(
+            initial_instance_count=1,
+            instance_type='local'
+        )
+#         estimator.fit(wait=False)
+#         training_job_name = estimator.latest_training_job.name
+#         estimator.attach(training_job_name)
+#         estimator.deploy(initial_instance_count=1,
+#                         instance_type='local')
 
     else:
-        print("please try preprocess, train or inference")
+        print("please try train or inference")

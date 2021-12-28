@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from .config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_FILENAME 
+from config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_FILENAME 
 
 ###############
 # Model Class #
@@ -82,7 +82,7 @@ class Model:
         self.estimator.fit(train_df[features], train_df[self.target])
 
         # # save model
-        # pickle.dump(self.estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+#         pickle.dump(self.estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
 
         # predict on test data
         predict_y = self.estimator.predict(val_df[features])
