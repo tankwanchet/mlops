@@ -109,14 +109,14 @@ class Model:
 # Tests #
 #########
 
-if __name__ == "__main__":
-    # Retrieving feature-engineered data
-    df = pd.read_csv(RAW_DATA_PATH)
-    preprocessor = Preprocessor(df)
-    data_df = preprocessor.transform()
-    print(data_df)
+# if __name__ == "__main__":
+#     # Retrieving feature-engineered data
+#     df = pd.read_csv(RAW_DATA_PATH)
+#     preprocessor = Preprocessor(df)
+#     data_df = preprocessor.transform()
+#     print(data_df)
 
-    # Testing string representation of Model
-    my_model = Model()
-    print("Current model:", my_model)
-    print(my_model.train(df=data_df,params=MY_PARAMS))
+#     # Testing string representation of Model
+#     my_model = Model()
+#     print("Current model:", my_model)
+#     print(my_model.train(df=data_df,params=MY_PARAMS))
