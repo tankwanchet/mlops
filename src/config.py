@@ -14,7 +14,7 @@ MY_PARAMS = {
             'n_jobs': -1, 
             'oob_score': True
         }
-TRAINED_MODEL_FILENAME = "/mlops/model_checkpoint/trained_model.pkl"
+TRAINED_MODEL_PATH = "/opt/ml/model/model.tar.gz"
 
-TRAIN_CSV = "./data/processed/titanic_train.csv"
-TEST_CSV = "./data/processed/titanic_test.csv"
+TRAIN_CSV = "/opt/ml/input/data/train/titanic_train.csv"
+TEST_CSV = "/opt/ml/input/data/test/titanic_test.csv"

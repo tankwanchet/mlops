@@ -5,8 +5,10 @@
 ####################
 
 # Libs
+import os
 import pandas as pd
 import pickle
+import joblib
 # from sklearn.model_selection import train_test_split
 # from sklearn.linear_model import LogisticRegression
 # from sklearn.tree import DecisionTreeClassifier
@@ -27,7 +29,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import TRAIN_CSV, MY_PARAMS, TRAINED_MODEL_FILENAME 
+from config import TRAIN_CSV, MY_PARAMS, TRAINED_MODEL_PATH 
 
 
 if __name__ == "__main__":
@@ -40,5 +42,8 @@ if __name__ == "__main__":
     roc_score, model_chkpt = my_model.train(df=df,params=MY_PARAMS)
     print("roc_score: ", roc_score)
     print("model_chkpt: ", model_chkpt)
-    pickle.dump(model_chkpt, open(TRAINED_MODEL_FILENAME, 'wb'))
+#     SM_MODEL_DIR="/opt/ml/model"
+    model_dir = os.environ['SM_MODEL_DIR']
+    joblib.dump(model_chkpt, os.path.join(model_dir, "model.joblib"))
+    # pickle.dump(model_chkpt, open(/opt/ml/model", 'wb'))
     print("model training complete!")

@@ -13,6 +13,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 
+
 # Custom
 try:
     from data_pipeline import Preprocessor
@@ -22,7 +23,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_FILENAME 
+from config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_PATH 
 
 ###############
 # Model Class #
@@ -83,7 +84,7 @@ class Model:
         trained_estimator.fit(train_df[features], train_df[self.target])
 
         # save model
-        pickle.dump(trained_estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+#         pickle.dump(trained_estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
 
         # predict on test data
         predict_y = trained_estimator.predict(val_df[features])

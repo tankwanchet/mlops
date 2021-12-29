@@ -5,8 +5,12 @@
 ####################
 
 # Libs
+import os
 import pandas as pd
 import pickle
+import joblib
+import tarfile
+
 # from sklearn.model_selection import train_test_split
 # from sklearn.linear_model import LogisticRegression
 # from sklearn.tree import DecisionTreeClassifier
@@ -27,7 +31,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import TEST_CSV, MY_PARAMS, TRAINED_MODEL_FILENAME, TARGET
+from config import TEST_CSV, MY_PARAMS, TRAINED_MODEL_PATH, TARGET
 
 def predict(df, local_model_path):
     """ Predicts using the trained model
@@ -42,7 +46,9 @@ def predict(df, local_model_path):
     features = df.columns[df.columns != TARGET]
     X_test = df[features]
     Y_test = df[TARGET]
-    trained_estimator = pickle.load(open(local_model_path, 'rb'))
+    
+    tar = tarfile.open(local_model_path)
+    trained_estimator = joblib.load(tar.extractfile(member=tar.getmember(name="model.joblib")))
     predict_y = trained_estimator.predict(X_test)
     return predict_y
 
@@ -52,5 +58,5 @@ if __name__ == "__main__":
     df = pd.read_csv(TEST_CSV)
     predict(
         df=df,
-        local_model_path=TRAINED_MODEL_FILENAME
+        local_model_path=TRAINED_MODEL_PATH
     )

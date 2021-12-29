@@ -10,3 +10,4 @@ six==1.16.0
 threadpoolctl==3.0.0
 sagemaker
 joblib
+sagemaker-training
