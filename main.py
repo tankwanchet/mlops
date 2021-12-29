@@ -6,13 +6,14 @@
 
 # Libs
 import argparse
+import joblib
 import os
 import sagemaker
 from sagemaker.estimator import Estimator
 import boto3
 import pandas as pd
-import pickle
 from sagemaker import Model, LocalSession, get_execution_role
+from sagemaker.predictor import csv_serializer
 
 ##################
 # Configurations #
@@ -64,33 +65,33 @@ if __name__ == "__main__":
 
         print("Local: Start fitting ... ")
         estimator.fit(job_name='mlops_training_1')
-        pickle.dump(estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+#         path = os.path.join(TRAINED_MODEL_FILENAME)
+#         joblib.dump(estimator, path)
+#         print('model persisted at ' + path)
 
 
     elif args.script_type == 'inference':
 #         os.system('docker build  --target inference_layer -t aws:infer .')
         image_uri="aws:infer"
-        model = sagemaker.model.Model(
-            image_uri=image_uri,
-            model_data='file://./model_checkpoint/model.tar.gz',
-            role=role
-        )
-#         estimator = Estimator(image_uri=image_uri, 
-#                             role=role, 
-#                             instance_count=1, 
-#                             instance_type='local', 
-#                             model_uri='file://./model_checkpoint/model.tar.gz')
+        os.system('docker build  --target inference_layer -t aws:infer .')
+
+        estimator = Estimator(image_uri=image_uri, 
+                            role=role, 
+                            instance_count=1, 
+                            instance_type='local', 
+                            model_uri='file://./model_checkpoint/model.tar.gz')
 
         print("Local: Start deploying ... ")
-        model.deploy(
-            initial_instance_count=1,
-            instance_type='local'
-        )
-#         estimator.fit(wait=False)
-#         training_job_name = estimator.latest_training_job.name
-#         estimator.attach(training_job_name)
-#         estimator.deploy(initial_instance_count=1,
-#                         instance_type='local')
+#         predictor = model.deploy(
+#             initial_instance_count=1,
+#             instance_type='local'
+#         )
+        estimator.fit(wait=False)
+        training_job_name = estimator.latest_training_job.name
+        estimator.attach(training_job_name)
+        estimator.deploy(initial_instance_count=1,
+                        instance_type='local',
+                         serializer=csv_serializer)
 
     else:
         print("please try train or inference")

@@ -40,4 +40,5 @@ if __name__ == "__main__":
     roc_score, model_chkpt = my_model.train(df=df,params=MY_PARAMS)
     print("roc_score: ", roc_score)
     print("model_chkpt: ", model_chkpt)
+    pickle.dump(model_chkpt, open(TRAINED_MODEL_FILENAME, 'wb'))
     print("model training complete!")

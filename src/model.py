@@ -78,32 +78,18 @@ class Model:
         )
 
         # train model
-        self.estimator.set_params(**params)
-        self.estimator.fit(train_df[features], train_df[self.target])
+        trained_estimator = self.estimator
+        trained_estimator.set_params(**params)
+        trained_estimator.fit(train_df[features], train_df[self.target])
 
-        # # save model
-#         pickle.dump(self.estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
+        # save model
+        pickle.dump(trained_estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
 
         # predict on test data
-        predict_y = self.estimator.predict(val_df[features])
+        predict_y = trained_estimator.predict(val_df[features])
         
         # Return a evaluation metric (roc_auc in this case) as a single float so the caller can make use of it
-        return roc_auc_score(val_df[self.target], predict_y), self.estimator
-
-    def predict(self, df):
-        """ Predicts using the trained model
-
-        Args:
-            df (pd.DataFrame): input data
-
-        Returns:
-            predict_y (pd.DataFrame): predicted data 
-
-        """
-        features = df.columns[df.columns != self.target]
-        trained_estimator = pickle.load(open(TRAINED_MODEL_FILENAME, 'rb'))
-        predict_y = trained_estimator.predict(df[features])
-        return predict_y
+        return roc_auc_score(val_df[self.target], predict_y), trained_estimator
 
 #########
 # Tests #

@@ -15,5 +15,5 @@ ENTRYPOINT ["python", "/mlops/src/train.py"]
 
 # run the inference layer
 from base as inference_layer
-# ENTRYPOINT ["python", "/mlops/src/inference.py"]
+ENTRYPOINT ["python", "/mlops/src/inference.py"]
 

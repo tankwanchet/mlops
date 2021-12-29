@@ -5,7 +5,7 @@ RAW_DATA_PATH = "./data/raw/titanic.csv"
 ORDINAL = ['Pclass', 'Ticket', 'Cabin', 'Parch', 'SibSp']
 NOMINAL = ['Embarked', 'Sex', 'Title']
 NUMERICAL = ['Age',  'Fare']
-
+TARGET = "Survived"
 MY_PARAMS = {
             'max_depth': 11, 
             'max_features': 8, 
@@ -14,7 +14,7 @@ MY_PARAMS = {
             'n_jobs': -1, 
             'oob_score': True
         }
-TRAINED_MODEL_FILENAME = './model_checkpoint/trained_model.sav'
+TRAINED_MODEL_FILENAME = "/mlops/model_checkpoint/trained_model.pkl"
 
 TRAIN_CSV = "./data/processed/titanic_train.csv"
 TEST_CSV = "./data/processed/titanic_test.csv"
