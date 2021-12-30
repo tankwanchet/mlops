@@ -5,17 +5,10 @@
 ####################
 
 # Libs
+import joblib
 import os
 import pandas as pd
-import pickle
-import joblib
 import tarfile
-
-# from sklearn.model_selection import train_test_split
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.metrics import roc_auc_score
 
 # Custom
 try:
@@ -32,6 +25,10 @@ except ModuleNotFoundError:
 # Configurations #
 ##################
 from config import TEST_CSV, MY_PARAMS, TRAINED_MODEL_PATH, TARGET
+
+###################
+# Helper Function #
+###################
 
 def predict(df, local_model_path):
     """ Predicts using the trained model
@@ -56,7 +53,5 @@ def predict(df, local_model_path):
 if __name__ == "__main__":
     # Retrieving feature-engineered data
     df = pd.read_csv(TEST_CSV)
-    predict(
-        df=df,
-        local_model_path=TRAINED_MODEL_PATH
-    )
+    pred_y = predict(df=df,local_model_path=TRAINED_MODEL_PATH)
+    print("inference completed")

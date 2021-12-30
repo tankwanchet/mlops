@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-########
-# Libs #
-########
+####################
+# Required Modules #
+####################
+
+# Libs
 import numpy as np
 import pandas as pd
 import re
@@ -20,7 +22,6 @@ class Preprocessor:
         df: pd.DataFrame) -> None:
         
         self.df = df
-
 
     # remove NA features or records
     def impute_nas(self, df, features):
@@ -94,6 +95,9 @@ class Preprocessor:
         df = df.set_index("PassengerId")
         return df
 
+#########
+# Tests #
+#########
 
 # if __name__ == "__main__":
 #     df = pd.read_csv(RAW_DATA_PATH)

@@ -13,7 +13,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 
-
 # Custom
 try:
     from data_pipeline import Preprocessor
@@ -70,6 +69,11 @@ class Model:
         Args:
             df (pd.DataFrame): input data
             params (dict): input model hyperparameters
+
+        Returns 
+            roc_score (float): roc auc score
+            trained_estimator (object): trained model
+            
         """
         
         # split val and train data
@@ -83,14 +87,14 @@ class Model:
         trained_estimator.set_params(**params)
         trained_estimator.fit(train_df[features], train_df[self.target])
 
-        # save model
-#         pickle.dump(trained_estimator, open(TRAINED_MODEL_FILENAME, 'wb'))
-
         # predict on test data
         predict_y = trained_estimator.predict(val_df[features])
+
+        # create the roc auc score
+        roc_score = roc_auc_score(val_df[self.target], predict_y)
         
-        # Return a evaluation metric (roc_auc in this case) as a single float so the caller can make use of it
-        return roc_auc_score(val_df[self.target], predict_y), trained_estimator
+        # return an evaluation metric and trained estimator
+        return roc_score, trained_estimator
 
 #########
 # Tests #

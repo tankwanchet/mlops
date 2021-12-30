@@ -4,15 +4,22 @@
 # Required Modules #
 ####################
 import pandas as pd
-import pickle
+import sys
+import joblib
 from sklearn.model_selection import train_test_split
 
 ##################
 # Configurations #
 ##################
-from src.config import RAW_DATA_PATH, TRAIN_CSV, TEST_CSV, MY_PARAMS, TRAINED_MODEL_FILENAME
+sys.path.append( './src' )
+from src.config import RAW_DATA_PATH, TRAIN_CSV_LOCAL, TEST_CSV_LOCAL, MY_PARAMS, TRAINED_MODEL_PATH_LOCAL
 from src.data_pipeline import Preprocessor
 from src.model import Model
+
+
+#################
+# Core Function #
+#################
 
 # run mlp training pipeline
 def run(data_path):
@@ -20,8 +27,7 @@ def run(data_path):
 
     Args:
         data_path (str): input data path
-    
-    
+   
     """
 
     # import data
@@ -41,15 +47,17 @@ def run(data_path):
     )
 
     # export train-test data
-    train_df.to_csv(TRAIN_CSV, index=False)
-    test_df.to_csv(TEST_CSV, index=False)
+    train_df.to_csv(TRAIN_CSV_LOCAL, index=False)
+    test_df.to_csv(TEST_CSV_LOCAL, index=False)
 
     # train model
     my_model = Model()
     print("Current model:", my_model)
     print(my_model.train(df=train_df,params=MY_PARAMS))
+    
     # save model
-    pickle.dump(my_model, open(TRAINED_MODEL_FILENAME, 'wb'))
+    joblib.dump(my_model, TRAINED_MODEL_PATH_LOCAL)
+
 
 if __name__ == "__main__":
     run(RAW_DATA_PATH)
