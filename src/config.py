@@ -18,7 +18,7 @@ NUMERICAL = ['Age',  'Fare']
 
 # Model training
 TARGET = "Survived"
-MY_PARAMS = {
+MODEL_PARAMS = {
             'max_depth': 11, 
             'max_features': 8, 
             'max_leaf_nodes': 27, 
@@ -26,5 +26,25 @@ MY_PARAMS = {
             'n_jobs': -1, 
             'oob_score': True
         }
+
 TRAINED_MODEL_PATH = "/opt/ml/model/model.tar.gz"
 TRAINED_MODEL_PATH_LOCAL = "./model_checkpoint/model.tar.gz"
+
+####################
+# AWS Service info #
+####################
+
+# DOCKER 
+ACCOUNT_ID = "397671599229"
+ECR_REPOSITORY = "mlops"
+TAG = "train"
+REGION = "us-east-2"
+URI_SUFFIX = "amazonaws.com"
+
+# S3
+S3_PREFIX = 'titanic-dataset' #prefix used for data stored within the bucket
+FULL_S3_TRAIN_PATH = 's3://sagemaker-us-east-2-397671599229/titanic-dataset/titanic_train.csv'
+FULL_S3_TEST_PATH = 's3://sagemaker-us-east-2-397671599229/titanic-dataset/titanic_test.csv'
+
+# Model
+TRAINED_MODEL = 's3://sagemaker-us-east-2-397671599229/titanic-dataset/model_output/mlops-2022-01-31-02-06-48-299/output/model.tar.gz'

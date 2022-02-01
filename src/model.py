@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import RAW_DATA_PATH, MY_PARAMS, TRAINED_MODEL_PATH 
+from config import RAW_DATA_PATH, MODEL_PARAMS, TRAINED_MODEL_PATH 
 
 ###############
 # Model Class #

@@ -23,7 +23,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import TRAIN_CSV, MY_PARAMS, TRAINED_MODEL_PATH 
+from config import TRAIN_CSV, MODEL_PARAMS, TRAINED_MODEL_PATH 
 
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     print("Current model:", my_model)
 
     # train the model
-    roc_score, model_chkpt = my_model.train(df=df,params=MY_PARAMS)
+    roc_score, model_chkpt = my_model.train(df=df,params=MODEL_PARAMS)
     print("roc_score: ", roc_score)
     print("model_chkpt: ", model_chkpt)
 

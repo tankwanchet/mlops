@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./data/processed/train/ /opt/ml/input/data/train/
 COPY ./src /opt/ml/code/src/
 COPY main.py /opt/ml/code/
+COPY main_sage.py /opt/ml/code/
 RUN mkdir /opt/ml/model/
 
 # run the training layer

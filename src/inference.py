@@ -24,7 +24,7 @@ except ModuleNotFoundError:
 ##################
 # Configurations #
 ##################
-from config import TEST_CSV, MY_PARAMS, TRAINED_MODEL_PATH, TARGET
+from config import TEST_CSV, MODEL_PARAMS, TRAINED_MODEL_PATH, TARGET
 
 ###################
 # Helper Function #
