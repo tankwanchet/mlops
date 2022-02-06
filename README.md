@@ -6,7 +6,7 @@ Besides getting reproducible machine learning pipelines, it is important to expl
 # Machine Learning Pipeline Architecture
 The architecture gives an overview on how the code repo could be reproduced. 
 
-![image info](./docs/mlp_arch.jpg)
+![image info](./docs/mlp_arch2.jpg)
 
 The code directory is as follows:
 ```
