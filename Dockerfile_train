@@ -1,11 +1,13 @@
 # build from base image
-FROM python:3.7 as base
+FROM python:3.7 as base_layer
 
 # install required packages
 RUN pip3 install sagemaker-training
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# build a train layer
+FROM base_layer as train_layer
 # copy source codes
 COPY ./data/processed/train/ /opt/ml/input/data/train/
 COPY ./src /opt/ml/code/src/
@@ -15,3 +17,13 @@ RUN mkdir /opt/ml/model/
 
 # run the training layer
 ENV SAGEMAKER_PROGRAM /opt/ml/code/src/train.py
+
+# build an infer layer
+FROM base_layer as infer_layer
+# copy source codes
+COPY ./data/processed/test/ /opt/ml/input/data/test/
+COPY ./src /opt/ml/code/src/
+COPY main.py /opt/ml/code/
+COPY main_sage.py /opt/ml/code/
+RUN mkdir /opt/ml/model/
+

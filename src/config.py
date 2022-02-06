@@ -38,8 +38,11 @@ TRAINED_MODEL_PATH_LOCAL = "./model_checkpoint/model.tar.gz"
 ACCOUNT_ID = "397671599229"
 ECR_REPOSITORY = "mlops"
 TAG = "train"
+TAG_INFER = "infer"
 REGION = "us-east-2"
 URI_SUFFIX = "amazonaws.com"
+TRAIN_LAYER = "train_layer"
+INFER_LAYER = "infer_layer"
 
 # S3
 S3_PREFIX = 'titanic-dataset' #prefix used for data stored within the bucket

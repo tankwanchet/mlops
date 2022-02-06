@@ -16,11 +16,21 @@ import pandas as pd
 import pickle
 from sagemaker import Model, LocalSession, get_execution_role
 from sagemaker.session import TrainingInput
+from sagemaker.sklearn.model import SKLearnModel
+import time
+from time import gmtime, strftime
+
+
+  
+from sagemaker.serializers import JSONSerializer
+from sagemaker.deserializers import JSONDeserializer
+from sagemaker.predictor import Predictor
+import json
 
 ##################
 # Configurations #
 ##################
-from src.config import TRAINED_MODEL_PATH, ACCOUNT_ID, ECR_REPOSITORY, TAG, REGION, URI_SUFFIX, S3_PREFIX, FULL_S3_TRAIN_PATH, FULL_S3_TEST_PATH, TRAINED_MODEL, MODEL_PARAMS
+from src.config import TRAINED_MODEL_PATH, ACCOUNT_ID, ECR_REPOSITORY, TAG, REGION, URI_SUFFIX, S3_PREFIX, FULL_S3_TRAIN_PATH, FULL_S3_TEST_PATH, TRAINED_MODEL, MODEL_PARAMS, TAG_INFER, TRAIN_LAYER, INFER_LAYER
 
 # Docker related info
 # ACCOUNT_ID = boto3.client("sts").get_caller_identity().get("Account")
@@ -28,6 +38,7 @@ from src.config import TRAINED_MODEL_PATH, ACCOUNT_ID, ECR_REPOSITORY, TAG, REGI
 # Docker configs
 IMAGE_URI = "{}.dkr.ecr.{}.{}/{}:{}".format(ACCOUNT_ID, REGION, URI_SUFFIX, ECR_REPOSITORY, TAG)
 PASSWORD_STDIN = "{}.dkr.ecr.{}.{}".format(ACCOUNT_ID, REGION, URI_SUFFIX)
+IMAGE_URI_INFER = "{}.dkr.ecr.{}.{}/{}:{}".format(ACCOUNT_ID, REGION, URI_SUFFIX, ECR_REPOSITORY, TAG_INFER)
 
 # Data configs
 ROLE = get_execution_role()
@@ -54,6 +65,9 @@ CHECKPOINT_LOCAL_PATH="/opt/ml/checkpoints"
 # The S3 URI to store the checkpoints
 checkpoint_s3_bucket="s3://{}/{}/{}".format(bucket, base_job_name, checkpoint_in_bucket)
 
+# Deployment
+client = boto3.client(service_name="sagemaker")
+runtime = boto3.client(service_name="sagemaker-runtime")
 
 # Argparser
 parser = argparse.ArgumentParser(description='List the content of a folder')
@@ -125,6 +139,75 @@ def set_data(s3_bucket, s3_prefix, s3_data_path, local_data_path):
         
     return valid_data_path
 
+def set_docker(
+    region, 
+    password_stdin, 
+    ecr_repository, 
+    tag, 
+    account_id, 
+    uri_suffix, 
+    docker_layer, 
+    image_uri,
+    docker_file_name
+):
+    """Sets a custom docker image and container"""
+    # set Docker env
+    try: 
+        # pull docker image
+        output = os.system('docker pull {}'.format(image_uri))
+        if output != 0:
+            # if docker pull fails, build docker image
+            os.system(
+                'aws ecr get-login-password --region {} | docker login --username AWS --password-stdin {}'.format(
+                    region, 
+                    password_stdin
+                )
+            )
+            # docker build
+            if args.script_type == "train":
+                os.system(
+                    'docker build --no-cache --target {} -t {}:{} -f {} .'.format(
+                        docker_layer,
+                        ecr_repository, 
+                        tag,
+                        docker_file_name
+                    )
+                )
+            elif args.script_type == "infer":
+                os.system(
+                    'docker build --no-cache -t {}:{} -f {} .'.format(
+                        ecr_repository, 
+                        tag,
+                        docker_file_name
+                    )
+                )
+            else:
+                print('no docker build.')
+            # tag docker image with ECR
+            os.system(
+                'docker tag {}:{} {}.dkr.ecr.{}.{}/{}:{}'.format(
+                    ecr_repository, 
+                    tag, 
+                    account_id, 
+                    region, 
+                    uri_suffix, 
+                    ecr_repository, 
+                    tag
+                )
+            )
+            # docker push image
+            os.system(
+                'docker push {}.dkr.ecr.{}.{}/{}:{}'.format(
+                    account_id, 
+                    region, 
+                    uri_suffix, 
+                    ecr_repository, 
+                    tag
+                )
+            )
+    except:
+        print('Other Docker errors exist.')
+
 #################
 # Core function #
 #################
@@ -132,45 +215,17 @@ def set_data(s3_bucket, s3_prefix, s3_data_path, local_data_path):
 def train():
         """Trains the ML model on an end-to-end pipeline."""
         
-        # set Docker env
-        try: 
-            # pull docker image
-            output = os.system('docker pull {}'.format(IMAGE_URI))
-            if output != 0:
-                # if docker pull fails, build docker image
-                os.system('aws ecr get-login-password --region {} | docker login --username AWS --password-stdin {}'.format(
-                    REGION, 
-                    PASSWORD_STDIN
-                )
-                         )
-                # docker build
-                os.system('docker build --no-cache -t {}:{} .'.format(
-                    ECR_REPOSITORY, 
-                    TAG
-                )
-                         )
-                # tag docker image with ECR
-                os.system('docker tag {}:{} {}.dkr.ecr.{}.{}/{}:{}'.format(
-                    ECR_REPOSITORY, 
-                    TAG, 
-                    ACCOUNT_ID, 
-                    REGION, 
-                    URI_SUFFIX, 
-                    ECR_REPOSITORY, 
-                    TAG
-                )
-                         )
-                # docker push image
-                os.system('docker push {}.dkr.ecr.{}.{}/{}:{}'.format(
-                    ACCOUNT_ID, 
-                    REGION, 
-                    URI_SUFFIX, 
-                    ECR_REPOSITORY, 
-                    TAG
-                )
-                         )
-        except:
-            print('Other Docker errors exist.')
+        set_docker(
+            region=REGION, 
+            password_stdin=PASSWORD_STDIN, 
+            ecr_repository=ECR_REPOSITORY, 
+            tag=TAG, 
+            account_id=ACCOUNT_ID, 
+            uri_suffix=URI_SUFFIX,
+            docker_layer=TRAIN_LAYER,
+            image_uri=IMAGE_URI,
+            docker_file_name="Dockerfile_train"
+        )
 
         # check S3 Data availability 
         train_valid_path = set_data(
@@ -229,189 +284,40 @@ def train():
         print("Fitting complete")
 
 
+
+        
+
 if __name__ == "__main__":
     
     if args.script_type == "train":
         train()    
         
     elif args.script_type == "infer":
+        set_docker(
+            region=REGION, 
+            password_stdin=PASSWORD_STDIN, 
+            ecr_repository=ECR_REPOSITORY, 
+            tag=TAG_INFER, 
+            account_id=ACCOUNT_ID, 
+            uri_suffix=URI_SUFFIX,
+            docker_layer=INFER_LAYER,
+            image_uri=IMAGE_URI_INFER,
+            docker_file_name="Dockerfile_serve"
+        )
         
-        # instantiate the trained model
-        trained_model = sagemaker.model.Model(
-            model_data=TRAINED_MODEL,
-            image_uri=IMAGE_URI,
-            role=ROLE
-        )  
-        
-        
-        # deploy trained model
-        print("deploying...")
-        trained_model.deploy(
-            initial_instance_count=1, 
-            instance_type='ml.m4.xlarge'
+        trained_model = Model(
+            image_uri=IMAGE_URI_INFER,
+            role=ROLE,
+            model_data=TRAINED_MODEL
         )
 
-        print("infer now!")
+        predictor = trained_model.deploy(
+            initial_instance_count=1,
+            instance_type='ml.m4.xlarge',
+            serializer=JSONSerializer(),
+            deserializer=JSONDeserializer(),
+        )
     
-#     # set Docker env
-#     try: 
-#         # pull docker image
-#         output = os.system('docker pull {}'.format(IMAGE_URI))
-#         if output != 0:
-#             # if docker pull fails, build docker image
-#             os.system('aws ecr get-login-password --region {} | docker login --username AWS --password-stdin {}'.format(REGION, PASSWORD_STDIN))
-#             os.system('docker build --no-cache -t {}:{} .'.format(ECR_REPOSITORY, TAG))
-#             os.system('docker tag {}:{} {}.dkr.ecr.{}.{}/{}:{}'.format(ECR_REPOSITORY, TAG, ACCOUNT_ID, REGION, URI_SUFFIX, ECR_REPOSITORY, TAG))
-#             os.system('docker push {}.dkr.ecr.{}.{}/{}:{}'.format(ACCOUNT_ID, REGION, URI_SUFFIX, ECR_REPOSITORY, TAG))
-#     except:
-#         print('Other Docker errors exist.')
-
-        
-#     # check S3 Data availability 
-#     train_valid_path = set_data(
-#         s3_bucket=S3_BUCKET, 
-#         s3_prefix=S3_KEY_TRAIN, 
-#         s3_data_path=FULL_S3_TRAIN_PATH, 
-#         local_data_path=LOCAL_TRAIN_PATH
-#     )
-#     print('s3 bucket training dataset is availabe.')
-    
-#     test_valid_path = set_data(
-#         s3_bucket=S3_BUCKET, 
-#         s3_prefix=S3_KEY_TEST, 
-#         s3_data_path=FULL_S3_TEST_PATH, 
-#         local_data_path=LOCAL_TEST_PATH
-#     )
-#     print('s3 bucket testing dataset is availabe.')
-    
-#     estimator = Estimator(
-#         image_uri=IMAGE_URI,
-#         role=ROLE,
-#         instance_count=1,
-#         instance_type='ml.m4.xlarge',
-#         output_path=OUTPUT_PATH,
-#         sagemaker_session=SESSION,
-#         checkpoint_s3_uri=CHECKPOINT_S3_BUCKET,
-#         checkpoint_local_path=CHECKPOINT_LOCAL_PATH
-#     )
-    
-#     print("instantiate estimator object")
-        
-#     train_input = sagemaker.TrainingInput(
-#        train_valid_path, 
-#         content_type="csv"
-#     )
-    
-#     validation_input = sagemaker.TrainingInput(
-#         test_valid_path, 
-#         content_type="csv"
-#     )
-    
-#     print("Local: Start fitting ... ")
-    
-#     estimator.fit(
-#         inputs={"train": train_input, "validation": validation_input}
-#     )
-    
-#     print("Fitting complete")
-
-
-#     check_output = check_path(s3_bucket=S3_BUCKET, s3_prefix=S3_KEY_TRAIN)
-#     if check_output:
-#         train_path = FULL_S3_TRAIN_PATH
-#         print('s3 bucket training dataset is availabe.')
-#     else: 
-#         train_path = SESSION.upload_data(LOCAL_TRAIN_PATH, key_prefix = S3_PREFIX)
-
-    
-    
-    
-#     except:
-#         print('Please check if s3 bucket is available.')
-    
-#     try:
-#         check_path(s3_bucket=S3_BUCKET, s3_prefix=S3_KEY_TEST)
-#         print('s3 bucket testing dataset is availabe.')
-
-#     except:
-#         print('Please check if s3 bucket is available.')
-    
-        
-    
-#     train_data = get_s3_df(bucket= S3_BUCKET, key=S3_KEY_TRAIN)
-#     test_data = get_s3_df(bucket= S3_BUCKET, key=S3_KEY_TEST)
-#     print("train_data: ", test_data)    
-    
-    # push data to S3 bucket
-#     test_path = session.upload_data(local_test_path, key_prefix = S3_PREFIX)
-#     train_path = session.upload_data(local_train_path, key_prefix = S3_PREFIX)
-#     print('train_path: ', train_path)
-#     print('test_path: ', test_path)
-    
-    
-    
-    
-#     # run Dockerfile
-#     os.system('aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 397671599229.dkr.ecr.us-east-2.amazonaws.com')
-#     os.system('docker build --no-cache -t mlops .')
-#     os.system('docker tag mlops:latest 397671599229.dkr.ecr.us-east-2.amazonaws.com/mlops:latest')
-# #     os.system('aws ecr get-login-password | docker login --username AWS --password-stdin 397671599229.dkr.ecr.us-east-2.amazonaws.com')
-#     os.system('docker push 397671599229.dkr.ecr.us-east-2.amazonaws.com/mlops:latest')
-
-# #     image_uri="aws:train"
-# #     print("byoc_image_uri: ", byoc_image_uri)
-
-#     # image uri
-#     image_uri = "397671599229.dkr.ecr.us-east-2.amazonaws.com/mlops:latest"
-#     print("image_uri: ", image_uri)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-#     estimator = Estimator(
-#         image_uri=image_uri, 
-#         role=role, 
-#         instance_count=1,
-#         instance_type='ml.m4.xlarge',
-#         output_path=bucket_name, 
-#         sagemaker_session=session
-# #         base_job_name=base_job_name,
-# #         checkpoint_s3_uri=checkpoint_s3_bucket,
-# #         checkpoint_local_path=checkpoint_local_path
-#     )
-    
-    # create s3 bucket if unavailable
-#     try:
-#         if  region == 'us-east-1':
-#             s3.create_bucket(Bucket=bucket_name)
-#         print('S3 bucket created successfully')
-#     except Exception as e:
-#         print('S3 error: ',e)
-
-#    print("Local: Start fitting ... ")
-#     train_input = sagemaker.TrainingInput(
-#         "s3://titanic-training-info/train/titanic_train.csv", 
-#         content_type="csv"
-#     )
-    
-#     validation_input = sagemaker.TrainingInput(
-#         "s3://titanic-training-info/test/titanic_test.csv", 
-#         content_type="csv"
-#     )
-    
-#     estimator.fit(
-#         inputs={"train": train_input, "validation": validation_input}
-#     )
-    
-#     print("Fitting complete")
     
 # https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-train-model.html
 # https://github.com/aws/sagemaker-python-sdk/issues/384
